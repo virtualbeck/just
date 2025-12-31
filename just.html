@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbershop Just Intonation Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js" defer></script>
+    <style>
+        :root {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --bg-container: linear-gradient(to bottom, #2a2a3e 0%, #1e1e2f 100%);
+            --bg-item: rgba(42, 42, 62, 0.6);
+            --bg-selector: rgba(212, 175, 55, 0.1);
+            --bg-highlight: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(244, 229, 184, 0.1));
+            --bg-playing: rgba(212, 175, 55, 0.3);
+            --text-primary: #f5f5f5;
+            --text-secondary: #a8a8b8;
+            --accent-gold: #d4af37;
+            --accent-gold-light: #f4e5b8;
+            --border-color: rgba(212, 175, 55, 0.2);
+            --border-highlight: rgba(212, 175, 55, 0.5);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --flat-color: #e06666;
+            --sharp-color: #93c47d;
+            --flat-bg: rgba(224, 102, 102, 0.2);
+            --sharp-bg: rgba(147, 196, 125, 0.2);
+            --musical-note-color: rgba(212, 175, 55, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 8px;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 12px;
+        }
+
+        @media (max-height: 800px) {
+            body {
+                align-items: flex-start;
+            }
+        }
+
+        .container {
+            max-width: 420px;
+            width: 100%;
+            background: var(--bg-container);
+            border-radius: 16px;
+            padding: 14px 25px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light), var(--accent-gold));
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 0;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px var(--shadow-color);
+            letter-spacing: 0.5px;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .mode-btn {
+            padding: 4px 10px;
+            background: var(--bg-item);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--border-highlight);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-gold);
+            color: #1a1a2e;
+            border-color: var(--accent-gold);
+        }
+
+        .global-key-selector {
+            background: var(--bg-selector);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .global-key-selector label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .global-key-selector select {
+            width: 100%;
+            padding: 7px;
+            background: var(--bg-item);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .chord-selector {
+            background: var(--bg-selector);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .selector-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .selector-wrapper {
+            flex: 1;
+        }
+
+        .selector-wrapper label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 3px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 7px;
+            background: var(--bg-item);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            border-color: var(--border-highlight);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        .play-chord-btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 3px 10px var(--shadow-color);
+        }
+
+        .play-chord-btn:hover:not(:disabled) {
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .play-chord-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .play-chord-btn:disabled {
+            background: var(--text-secondary);
+            opacity: 0.3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .note-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 10px;
+            min-height: 400px;
+        }
+
+        .note-item {
+            background: var(--bg-item);
+            border-radius: 10px;
+            padding: 7px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .note-item:hover {
+            background: var(--bg-playing);
+            border-color: var(--border-highlight);
+        }
+
+        .note-item.highlight {
+            background: var(--bg-highlight);
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .note-item.playing {
+            background: var(--bg-playing);
+            border-color: var(--accent-gold);
+        }
+
+        .note-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .note-value {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cents {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-width: 55px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cents.zero {
+            color: #6b9bd1;
+        }
+
+        .cents.flat {
+            color: var(--flat-color);
+        }
+
+        .cents.sharp {
+            color: var(--sharp-color);
+        }
+
+        .direction {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 5px;
+            letter-spacing: 0.5px;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .direction.flat {
+            background: var(--flat-bg);
+            color: var(--flat-color);
+            border: 1px solid var(--flat-color);
+        }
+
+        .direction.sharp {
+            background: var(--sharp-bg);
+            color: var(--sharp-color);
+            border: 1px solid var(--sharp-color);
+        }
+
+        .note-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+            color: #1a1a2e;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-left: 5px;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+
+        /* Chord Builder Mode */
+        .chord-builder-controls {
+            display: none;
+            background: var(--bg-selector);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chord-builder-controls.active {
+            display: block;
+        }
+
+        .play-selected-btn {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            margin-bottom: 8px;
+        }
+
+        .play-selected-btn:disabled {
+            background: var(--text-secondary);
+            opacity: 0.3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .randomize-voicing-btn {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-item);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            margin-bottom: 8px;
+        }
+
+        .randomize-voicing-btn:hover:not(:disabled) {
+            background: var(--bg-highlight);
+            border-color: var(--accent-gold);
+        }
+
+        .randomize-voicing-btn:disabled {
+            background: var(--text-secondary);
+            opacity: 0.3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .chord-identification {
+            font-size: 0.85rem;
+            padding: 8px;
+            background: var(--bg-item);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .chord-identification .label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .chord-identification .chord-name {
+            color: var(--accent-gold);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .chord-identification .no-match {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .voicing-info {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .voicing-description {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Staff View Mode */
+        .staff-notation-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .staff-notation {
+            background: var(--bg-item);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #staff-canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .note-item.selected {
+            background: var(--bg-highlight);
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .builder-mode .note-item {
+            cursor: pointer;
+        }
+
+        @media (max-height: 740px) {
+            body {
+                padding: 8px;
+                padding-top: 10px;
+                padding-bottom: 15px;
+            }
+            .container {
+                padding: 12px 22px;
+            }
+            h1 {
+                font-size: 1rem;
+            }
+            .note-grid {
+                gap: 4px;
+            }
+            .note-item {
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Just Intonation Tuning Guide</h1>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="reference">Reference</button>
+            <button class="mode-btn" data-mode="builder">Chord Builder</button>
+        </div>
+
+        <div class="global-key-selector">
+            <label for="key-select">Key</label>
+            <select id="key-select">
+                <option value="">Choose key...</option>
+                <option value="C">C</option>
+                <option value="C#">C# / Db</option>
+                <option value="D">D</option>
+                <option value="D#">D# / Eb</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="F#">F# / Gb</option>
+                <option value="G">G</option>
+                <option value="G#">G# / Ab</option>
+                <option value="A">A</option>
+                <option value="A#">A# / Bb</option>
+                <option value="B">B</option>
+            </select>
+        </div>
+
+        <div class="chord-selector">
+            <div class="selector-group">
+                <div class="selector-wrapper">
+                    <label for="chord-select">Chord Type</label>
+                    <select id="chord-select">
+                        <option value="">Choose chord...</option>
+                        <option value="major-triad">Major Triad</option>
+                        <option value="dominant-7th">Dominant 7th</option>
+                        <option value="dominant-9th">Dominant 9th</option>
+                        <option value="dominant-13th">Dominant 13th</option>
+                        <option value="major-add9">Major add9</option>
+                        <option value="minor-triad">Minor Triad</option>
+                        <option value="minor-add9">Minor add9</option>
+                        <option value="major-6th">Major 6th</option>
+                        <option value="augmented">Augmented Chord</option>
+                        <option value="major-7th">Major 7th</option>
+                        <option value="minor-6th">Minor 6th (or rootless 9th)</option>
+                        <option value="minor-minor-7th">Minor minor 7th</option>
+                    </select>
+                </div>
+            </div>
+            <button class="play-chord-btn" id="play-chord-btn" disabled>
+                ♪ Play Chord ♪
+            </button>
+        </div>
+
+        <div class="chord-builder-controls" id="chord-builder-controls">
+            <button class="play-selected-btn" id="play-selected-btn" disabled>
+                ♪ Play Selected Notes ♪
+            </button>
+            <button class="randomize-voicing-btn" id="randomize-voicing-btn" disabled>
+                🎲 Randomize Voicing
+            </button>
+            <div class="chord-identification" id="chord-identification">
+                <div class="label">Chord Identified:</div>
+                <div class="chord-name no-match">Select intervals to identify chord</div>
+                <div class="voicing-info" id="voicing-info" style="display: none;">
+                    <div class="voicing-description"></div>
+                </div>
+            </div>
+            
+            <!-- Staff Notation integrated into Chord Builder -->
+            <div class="staff-notation-section" id="staff-notation-section">
+                <div class="staff-notation" id="staff-notation">
+                    <canvas id="staff-canvas" width="500" height="800"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="note-grid">
+            <div class="note-item highlight">
+                <span class="note-name">Root (1:1)</span>
+                <div class="note-value">
+                    <span class="cents zero">0</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Major 2nd (9:8)</span>
+                <div class="note-value">
+                    <span class="cents sharp">+4</span>
+                    <span class="direction sharp">SHARP</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Minor 3rd (6:5)</span>
+                <div class="note-value">
+                    <span class="cents sharp">+16</span>
+                    <span class="direction sharp">SHARP</span>
+                </div>
+            </div>
+
+            <div class="note-item highlight">
+                <span class="note-name">Major 3rd (5:4)</span>
+                <div class="note-value">
+                    <span class="cents flat">-14</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Perfect 4th (4:3)</span>
+                <div class="note-value">
+                    <span class="cents flat">-2</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+
+            <div class="note-item highlight">
+                <span class="note-name">Perfect 5th (3:2)</span>
+                <div class="note-value">
+                    <span class="cents sharp">+2</span>
+                    <span class="direction sharp">SHARP</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Minor 6th (8:5)</span>
+                <div class="note-value">
+                    <span class="cents flat">-4</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Major 6th (5:3)</span>
+                <div class="note-value">
+                    <span class="cents flat">-16</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Major 6th (27:16)</span>
+                <div class="note-value">
+                    <span class="cents sharp">+19</span>
+                    <span class="direction sharp">SHARP</span>
+                </div>
+            </div>
+
+            <div class="note-item highlight">
+                <span class="note-name">♭7 Barbershop (7:4)</span>
+                <div class="note-value">
+                    <span class="cents flat">-31</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+
+            <div class="note-item">
+                <span class="note-name">Major 7th (15:8)</span>
+                <div class="note-value">
+                    <span class="cents flat">-12</span>
+                    <span class="direction flat">FLAT</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mode switching (Reference vs Chord Builder)
+        let currentMode = 'reference';
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const chordSelector = document.querySelector('.chord-selector');
+        const chordBuilderControls = document.getElementById('chord-builder-controls');
+        const noteGrid = document.querySelector('.note-grid');
+        const container = document.querySelector('.container');
+        let selectedIntervals = new Set();
+        
+        // State preservation
+        let savedState = {
+            reference: {
+                chord: ''
+            },
+            builder: {
+                intervals: new Set()
+            }
+        };
+        
+        // Current voicing octaves for randomization
+        let currentVoicing = null;
+
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.getAttribute('data-mode');
+                
+                // Save current state before switching (not key - it's global)
+                if (currentMode === 'reference') {
+                    savedState.reference.chord = document.getElementById('chord-select').value;
+                } else if (currentMode === 'builder') {
+                    savedState.builder.intervals = new Set(selectedIntervals);
+                }
+                
+                currentMode = mode;
+                
+                modeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Hide all mode-specific controls
+                chordSelector.style.display = 'none';
+                chordBuilderControls.classList.remove('active');
+                container.classList.remove('builder-mode');
+                noteGrid.style.display = 'flex';
+                
+                // Clear all highlights and badges
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.remove('highlight', 'playing', 'selected');
+                });
+                document.querySelectorAll('.note-badge').forEach(badge => badge.remove());
+                
+                if (mode === 'reference') {
+                    // Reference mode
+                    chordSelector.style.display = 'block';
+                    document.getElementById('chord-select').value = savedState.reference.chord;
+                    
+                    // Clear any voicing from builder mode
+                    currentVoicing = null;
+                    
+                    updateChordDisplay();
+                    
+                } else if (mode === 'builder') {
+                    // Chord Builder mode (with integrated staff view)
+                    chordBuilderControls.classList.add('active');
+                    container.classList.add('builder-mode');
+                    
+                    // Restore builder state
+                    selectedIntervals = new Set(savedState.builder.intervals);
+                    document.querySelectorAll('.note-item').forEach(item => {
+                        const intervalName = item.querySelector('.note-name').textContent.trim();
+                        if (selectedIntervals.has(intervalName)) {
+                            item.classList.add('selected');
+                        }
+                    });
+                    
+                    // Show note badges in builder mode based on key
+                    updateBuilderNoteBadges();
+                    updateChordIdentification();
+                    
+                    // Draw staff notation
+                    drawStaffNotation();
+                }
+            });
+        });
+
+        // Note system
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const enharmonicMap = {
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
+        };
+
+        // Map interval names to semitones
+        const intervalToSemitones = {
+            'Root (1:1)': 0,
+            'Major 2nd (9:8)': 2,
+            'Minor 3rd (6:5)': 3,
+            'Major 3rd (5:4)': 4,
+            'Perfect 4th (4:3)': 5,
+            'Perfect 5th (3:2)': 7,
+            'Minor 6th (8:5)': 8,
+            'Major 6th (5:3)': 9,
+            'Major 6th (27:16)': 9,
+            '♭7 Barbershop (7:4)': 10,
+            'Major 7th (15:8)': 11
+        };
+
+        // Map interval names to cent adjustments
+        const intervalToCents = {
+            'Root (1:1)': 0,
+            'Major 2nd (9:8)': 4,
+            'Minor 3rd (6:5)': 16,
+            'Major 3rd (5:4)': -14,
+            'Perfect 4th (4:3)': -2,
+            'Perfect 5th (3:2)': 2,
+            'Minor 6th (8:5)': -4,
+            'Major 6th (5:3)': -16,
+            'Major 6th (27:16)': 19,
+            '♭7 Barbershop (7:4)': -31,
+            'Major 7th (15:8)': -12
+        };
+
+        // Define chord structures (which intervals each chord uses)
+        const chordStructures = {
+            'major-triad': ['Root (1:1)', 'Major 3rd (5:4)', 'Perfect 5th (3:2)'],
+            'dominant-7th': ['Root (1:1)', 'Major 3rd (5:4)', 'Perfect 5th (3:2)', '♭7 Barbershop (7:4)'],
+            'dominant-9th': ['Root (1:1)', 'Major 3rd (5:4)', '♭7 Barbershop (7:4)', 'Major 2nd (9:8)'],
+            'dominant-13th': ['Root (1:1)', 'Major 3rd (5:4)', '♭7 Barbershop (7:4)', 'Major 6th (5:3)'],
+            'major-add9': ['Root (1:1)', 'Major 3rd (5:4)', 'Perfect 5th (3:2)', 'Major 2nd (9:8)'],
+            'minor-triad': ['Root (1:1)', 'Minor 3rd (6:5)', 'Perfect 5th (3:2)'],
+            'minor-add9': ['Root (1:1)', 'Minor 3rd (6:5)', 'Perfect 5th (3:2)', 'Major 2nd (9:8)'],
+            'major-6th': ['Root (1:1)', 'Major 3rd (5:4)', 'Perfect 5th (3:2)', 'Major 6th (5:3)'],
+            'augmented': ['Root (1:1)', 'Major 3rd (5:4)', 'Minor 6th (8:5)'],
+            'major-7th': ['Root (1:1)', 'Major 3rd (5:4)', 'Perfect 5th (3:2)', 'Major 7th (15:8)'],
+            'minor-6th': ['Root (1:1)', 'Minor 3rd (6:5)', 'Perfect 5th (3:2)', 'Major 6th (27:16)'],
+            'minor-minor-7th': ['Root (1:1)', 'Minor 3rd (6:5)', 'Perfect 5th (3:2)', '♭7 Barbershop (7:4)']
+        };
+
+        // Common barbershop voicings for each chord type
+        // Format: [Bass, Baritone, Lead, Tenor] with voice part percentages
+        const commonVoicings = {
+            'major-triad': {
+                voicing: ['Root', '5th', 'Root (octave)', '3rd'],
+                description: 'Expanded voicing with 3rd on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'dominant-7th': {
+                voicing: ['Root', '5th', '3rd', '♭7'],
+                description: 'Classic 4-5-6-7 harmonic series',
+                balance: 'Bass 50% • Baritone 20% • Lead 20% • Tenor 10%'
+            },
+            'dominant-9th': {
+                voicing: ['Root', '3rd', '♭7', '9th'],
+                description: 'Rootless voicing, melody often in Lead',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'dominant-13th': {
+                voicing: ['Root', '3rd', '♭7', '13th'],
+                description: '7th chord with added 13th on top',
+                balance: 'Bass 50% • Baritone 15% • Lead 25% • Tenor 10%'
+            },
+            'major-add9': {
+                voicing: ['Root', '5th', '9th', '3rd'],
+                description: 'Major triad with 9th, 3rd on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'minor-triad': {
+                voicing: ['Root', '5th', 'Root (octave)', '♭3rd'],
+                description: 'Expanded voicing with ♭3rd on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'minor-add9': {
+                voicing: ['Root', '5th', '9th', '♭3rd'],
+                description: 'Minor triad with 9th, ♭3rd on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'major-6th': {
+                voicing: ['Root', '5th', '3rd', '6th'],
+                description: 'Major triad with 6th on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'augmented': {
+                voicing: ['Root', '3rd', '5th (aug)', 'Root (octave)'],
+                description: 'Symmetrical augmented chord',
+                balance: 'Bass 40% • Baritone 25% • Lead 25% • Tenor 10%'
+            },
+            'major-7th': {
+                voicing: ['Root', '5th', '3rd', '7th'],
+                description: 'Major triad with major 7th',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'minor-6th': {
+                voicing: ['Root', '5th', '♭3rd', '6th'],
+                description: 'Minor triad with 6th on top',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            },
+            'minor-minor-7th': {
+                voicing: ['Root', '5th', '♭3rd', '♭7'],
+                description: 'Minor triad with ♭7',
+                balance: 'Bass 40% • Baritone 20% • Lead 30% • Tenor 10%'
+            }
+        };
+
+        // Chord Builder: Identify chord from selected intervals
+        function identifyChord() {
+            const selected = Array.from(selectedIntervals).sort();
+            
+            // Try to find exact matches
+            for (const [chordName, intervals] of Object.entries(chordStructures)) {
+                const chordIntervals = intervals.sort();
+                if (selected.length === chordIntervals.length &&
+                    selected.every((val, idx) => val === chordIntervals[idx])) {
+                    return chordName;
+                }
+            }
+            
+            return null;
+        }
+
+        function formatChordName(chordKey) {
+            const nameMap = {
+                'major-triad': 'Major Triad',
+                'dominant-7th': 'Dominant 7th',
+                'dominant-9th': 'Dominant 9th',
+                'dominant-13th': 'Dominant 13th',
+                'major-add9': 'Major add9',
+                'minor-triad': 'Minor Triad',
+                'minor-add9': 'Minor add9',
+                'major-6th': 'Major 6th',
+                'augmented': 'Augmented',
+                'major-7th': 'Major 7th',
+                'minor-6th': 'Minor 6th',
+                'minor-minor-7th': 'Minor minor 7th'
+            };
+            return nameMap[chordKey] || chordKey;
+        }
+
+        function updateChordIdentification() {
+            const identificationDiv = document.getElementById('chord-identification');
+            const chordNameDiv = identificationDiv.querySelector('.chord-name');
+            const voicingInfoDiv = document.getElementById('voicing-info');
+            const playSelectedBtn = document.getElementById('play-selected-btn');
+            const randomizeBtn = document.getElementById('randomize-voicing-btn');
+            
+            const keySelected = document.getElementById('key-select').value !== '';
+            const enoughIntervals = selectedIntervals.size >= 3;
+            
+            if (selectedIntervals.size === 0) {
+                chordNameDiv.className = 'chord-name no-match';
+                chordNameDiv.textContent = 'Select intervals to identify chord';
+                voicingInfoDiv.style.display = 'none';
+                playSelectedBtn.disabled = true;
+                randomizeBtn.disabled = true;
+            } else {
+                const identified = identifyChord();
+                if (identified) {
+                    chordNameDiv.className = 'chord-name';
+                    chordNameDiv.textContent = formatChordName(identified);
+                    
+                    // Show only description
+                    const voicing = commonVoicings[identified];
+                    if (voicing && voicing.description) {
+                        voicingInfoDiv.style.display = 'block';
+                        voicingInfoDiv.querySelector('.voicing-description').textContent = voicing.description;
+                    } else {
+                        voicingInfoDiv.style.display = 'none';
+                    }
+                } else {
+                    chordNameDiv.className = 'chord-name no-match';
+                    chordNameDiv.textContent = 'No matching barbershop chord';
+                    voicingInfoDiv.style.display = 'none';
+                }
+                playSelectedBtn.disabled = false;
+                
+                // Enable randomize button if key is selected and 3+ intervals
+                randomizeBtn.disabled = !(keySelected && enoughIntervals);
+            }
+            
+            // Update note badges in builder mode
+            updateBuilderNoteBadges();
+        }
+
+        // Update note badges in builder mode
+        function updateBuilderNoteBadges() {
+            if (currentMode !== 'builder') return;
+            
+            const key = document.getElementById('key-select').value;
+            if (!key) return;
+            
+            // Remove existing badges
+            document.querySelectorAll('.note-badge').forEach(badge => badge.remove());
+            
+            // Add badges to selected intervals
+            selectedIntervals.forEach(intervalName => {
+                const noteItems = document.querySelectorAll('.note-item');
+                noteItems.forEach(item => {
+                    const itemInterval = item.querySelector('.note-name').textContent.trim();
+                    if (itemInterval === intervalName) {
+                        const noteName = calculateNote(key, intervalName);
+                        const badge = document.createElement('span');
+                        badge.className = 'note-badge';
+                        badge.textContent = noteName;
+                        item.querySelector('.note-name').appendChild(badge);
+                    }
+                });
+            });
+        }
+
+        // Draw staff notation
+        function drawStaffNotation() {
+            const canvas = document.getElementById('staff-canvas');
+            const ctx = canvas.getContext('2d');
+            const key = document.getElementById('key-select').value;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (!currentVoicing || Object.keys(currentVoicing).length < 3) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary');
+                ctx.font = '16px "JetBrains Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('Click "Randomize Voicing"', canvas.width / 2, canvas.height / 2 - 10);
+                ctx.fillText('to see staff notation', canvas.width / 2, canvas.height / 2 + 10);
+                return;
+            }
+            
+            if (!key) {
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary');
+                ctx.font = '18px "JetBrains Mono", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('Select a key to see staff notation', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            const goldColor = getComputedStyle(document.body).getPropertyValue('--accent-gold');
+            
+            // Calculate all note positions (position 0 = middle C)
+            const notesToDraw = [];
+            Object.entries(currentVoicing).forEach(([interval, octaveOffset]) => {
+                const actualOctave = 4 + octaveOffset;
+                const noteName = calculateNote(key, interval);
+                const noteBase = noteName.replace(/[#♭b]/g, '')[0];
+                
+                // Calculate staff position (0 = middle C = C4)
+                const noteIndex = ['C', 'D', 'E', 'F', 'G', 'A', 'B'].indexOf(noteBase);
+                const octavePosition = (actualOctave - 4) * 7;
+                const position = octavePosition + noteIndex;
+                
+                notesToDraw.push({
+                    noteName,
+                    position,
+                    octave: actualOctave,
+                    useSharp: noteName.includes('#') || noteName.includes('♯'),
+                    useFlat: noteName.includes('b') || noteName.includes('♭')
+                });
+            });
+            
+            // Portrait layout - use vertical space!
+            const padding = 60; // Top and bottom padding
+            const lineSpacing = 55; // Larger spacing for portrait
+            const trebleStaffCenter = padding + 180; // Treble staff higher up
+            const bassStaffCenter = canvas.height - padding - 180; // Bass staff lower down
+            
+            // Staff line boundaries - centered horizontally
+            const clefX = 20; // Clef position
+            const noteStartX = 200; // Where notes start
+            const noteLabelSpace = 80; // Space for note labels to the right
+            const staffLeft = clefX + 130; // Start staff lines just after clef
+            const staffRight = noteStartX + noteLabelSpace; // End just after note labels
+            
+            // Draw staff lines - ALWAYS 5 lines per staff with thicker borders
+            ctx.strokeStyle = goldColor;
+            ctx.lineWidth = 3;
+            
+            // First draw black borders for staff lines
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 5; // Thicker black border (was 3 for gold)
+            
+            // TREBLE STAFF - always 5 lines (black border)
+            for (let i = 0; i < 5; i++) {
+                const y = trebleStaffCenter - lineSpacing * 2 + i * lineSpacing;
+                ctx.beginPath();
+                ctx.moveTo(staffLeft, y);
+                ctx.lineTo(staffRight, y);
+                ctx.stroke();
+            }
+            
+            // BASS STAFF - always 5 lines (black border)
+            for (let i = 0; i < 5; i++) {
+                const y = bassStaffCenter - lineSpacing * 2 + i * lineSpacing;
+                ctx.beginPath();
+                ctx.moveTo(staffLeft, y);
+                ctx.lineTo(staffRight, y);
+                ctx.stroke();
+            }
+            
+            // Now draw gold lines on top
+            ctx.strokeStyle = goldColor;
+            ctx.lineWidth = 3;
+            
+            // TREBLE STAFF - always 5 lines (gold)
+            for (let i = 0; i < 5; i++) {
+                const y = trebleStaffCenter - lineSpacing * 2 + i * lineSpacing;
+                ctx.beginPath();
+                ctx.moveTo(staffLeft, y);
+                ctx.lineTo(staffRight, y);
+                ctx.stroke();
+            }
+            
+            // BASS STAFF - always 5 lines (gold)
+            for (let i = 0; i < 5; i++) {
+                const y = bassStaffCenter - lineSpacing * 2 + i * lineSpacing;
+                ctx.beginPath();
+                ctx.moveTo(staffLeft, y);
+                ctx.lineTo(staffRight, y);
+                ctx.stroke();
+            }
+            
+            // Draw BOTH clefs - always visible
+            // Treble clef (centered on second line from bottom = G4 line)
+            drawClef(ctx, '𝄞', clefX, trebleStaffCenter + lineSpacing * 1.5, 140, goldColor);
+            
+            // Bass clef (centered on second line from top = F3 line)
+            drawClef(ctx, '𝄢', clefX + 10, bassStaffCenter + lineSpacing * 0.5, 110, goldColor);
+            
+            // Draw notes
+            notesToDraw.forEach(note => {
+                if (note.position >= 2) {
+                    // Treble clef (E4 and above - bottom line of treble = E4 = position 2)
+                    // Middle line = B4 = position 6
+                    const trebleMiddle = 6;
+                    const relativePos = note.position - trebleMiddle;
+                    const y = trebleStaffCenter - relativePos * (lineSpacing / 2);
+                    drawNote(ctx, noteStartX, y, note, goldColor, lineSpacing);
+                } else {
+                    // Bass clef (D4 and below)
+                    // Middle line = D3 = position -6
+                    const bassMiddle = -6;
+                    const relativePos = note.position - bassMiddle;
+                    const y = bassStaffCenter - relativePos * (lineSpacing / 2);
+                    drawNote(ctx, noteStartX, y, note, goldColor, lineSpacing);
+                }
+            });
+        }
+        
+        // Helper function to draw clef with black border
+        function drawClef(ctx, symbol, x, y, fontSize, color) {
+            ctx.font = `bold ${fontSize}px serif`;
+            ctx.textAlign = 'left';
+            
+            // Black border (2px stroke)
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(symbol, x, y);
+            
+            // Gold fill
+            ctx.fillStyle = color;
+            ctx.fillText(symbol, x, y);
+        }
+        
+        // Helper function to draw a single note
+        function drawNote(ctx, x, y, note, color, lineSpacing) {
+            const noteHeadWidth = 18;
+            const noteHeadHeight = 15;
+            
+            // Draw note head with black border
+            ctx.fillStyle = color;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(x, y, noteHeadWidth, noteHeadHeight, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw stem with black border
+            const stemX = x + noteHeadWidth - 2;
+            const stemTop = y - lineSpacing * 2.5;
+            
+            // Thicker black border for stem
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(stemX, y);
+            ctx.lineTo(stemX, stemTop);
+            ctx.stroke();
+            
+            // Gold stem on top
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(stemX, y);
+            ctx.lineTo(stemX, stemTop);
+            ctx.stroke();
+            
+            // Draw sharp or flat symbol with THICKER black border (matching notes)
+            ctx.font = 'bold 50px serif';
+            ctx.textAlign = 'right';
+            if (note.useSharp) {
+                // Black border - now 2px like notes
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3; // Thicker for better visibility
+                ctx.strokeText('♯', x - 30, y + 15);
+                // Gold fill
+                ctx.fillStyle = color;
+                ctx.fillText('♯', x - 30, y + 15);
+            } else if (note.useFlat) {
+                // Black border - now 2px like notes
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3; // Thicker for better visibility
+                ctx.strokeText('♭', x - 30, y + 15);
+                // Gold fill
+                ctx.fillStyle = color;
+                ctx.fillText('♭', x - 30, y + 15);
+            }
+            
+            // Draw note name with THICKER black border (matching notes)
+            ctx.font = 'bold 28px "JetBrains Mono", monospace';
+            ctx.textAlign = 'left';
+            
+            // Black border - now 2px like notes
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3; // Thicker for better visibility
+            ctx.strokeText(note.noteName, x + 40, y + 10);
+            
+            // Gold fill
+            ctx.fillStyle = color;
+            ctx.fillText(note.noteName, x + 40, y + 10);
+        }
+
+        function toggleIntervalSelection(intervalName) {
+            if (selectedIntervals.has(intervalName)) {
+                selectedIntervals.delete(intervalName);
+            } else {
+                selectedIntervals.add(intervalName);
+            }
+            updateChordIdentification();
+        }
+
+        // Randomize voicing - assigns intervals to different octaves
+        function randomizeVoicing() {
+            let intervals;
+            
+            if (currentMode === 'builder') {
+                // In builder mode, use selected intervals
+                intervals = Array.from(selectedIntervals);
+            } else {
+                // Shouldn't be called from reference mode anymore, but just in case
+                return;
+            }
+            
+            if (intervals.length < 3) return;
+            
+            // Barbershop voice ranges (in octaves relative to C4)
+            // Bass: -1 (C3), Baritone: 0 (C4), Lead: 0 (C4), Tenor: +1 (C5)
+            const voiceOctaves = [-1, -1, 0, 0, 0, 1]; // Weighted toward middle
+            
+            // Shuffle and assign octaves
+            currentVoicing = {};
+            intervals.forEach(interval => {
+                const randomOctave = voiceOctaves[Math.floor(Math.random() * voiceOctaves.length)];
+                currentVoicing[interval] = randomOctave;
+            });
+            
+            console.log('Randomized voicing:', currentVoicing);
+            
+            // Redraw staff notation in builder mode
+            if (currentMode === 'builder') {
+                drawStaffNotation();
+            }
+        }
+
+        // Listen for key changes to update all modes
+        document.getElementById('key-select').addEventListener('change', () => {
+            if (currentMode === 'reference') {
+                updateChordDisplay();
+            } else if (currentMode === 'builder') {
+                updateBuilderNoteBadges();
+                updateChordIdentification();
+                drawStaffNotation();
+            }
+        });
+
+        // Audio setup
+        let synth = null;
+        let audioInitialized = false;
+        let activeNotes = new Map(); // Track active notes with their frequencies
+        let baseVolume = -10; // Increased volume (in dB)
+        
+        function initAudio() {
+            if (!audioInitialized) {
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'square' },
+                    envelope: {
+                        attack: 0.1,
+                        decay: 0.2,
+                        sustain: 0.7,
+                        release: 0.3
+                    },
+                    volume: baseVolume
+                }).toDestination();
+                audioInitialized = true;
+            }
+        }
+
+        // Adjust volume based on number of active notes
+        function updateVolume() {
+            if (!synth) return;
+            const numNotes = activeNotes.size;
+            if (numNotes === 0) {
+                synth.volume.value = baseVolume;
+            } else if (numNotes === 1) {
+                synth.volume.value = baseVolume;
+            } else if (numNotes === 2) {
+                synth.volume.value = baseVolume - 3;
+            } else if (numNotes === 3) {
+                synth.volume.value = baseVolume - 5;
+            } else {
+                synth.volume.value = baseVolume - 7;
+            }
+        }
+
+        // Calculate frequency with cent adjustment
+        function calculateFrequency(rootNote, intervalName, octave = 4) {
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const rootIndex = noteNames.indexOf(rootNote);
+            const semitones = intervalToSemitones[intervalName];
+            
+            // Calculate base frequency (A4 = 440Hz)
+            const A4 = 440;
+            const semitonesFromA4 = (octave - 4) * 12 + (rootIndex + semitones) - 9;
+            const baseFrequency = A4 * Math.pow(2, semitonesFromA4 / 12);
+            
+            // Apply cent adjustment
+            const cents = intervalToCents[intervalName];
+            const frequency = baseFrequency * Math.pow(2, cents / 1200);
+            
+            return frequency;
+        }
+
+        function calculateNote(rootNote, intervalName) {
+            const rootIndex = notes.indexOf(rootNote);
+            const semitones = intervalToSemitones[intervalName];
+            const noteIndex = (rootIndex + semitones) % 12;
+            let noteName = notes[noteIndex];
+            
+            // Add enharmonic equivalent for display
+            if (enharmonicMap[noteName]) {
+                noteName += '/' + enharmonicMap[noteName];
+            }
+            
+            return noteName;
+        }
+
+        function updateChordDisplay() {
+            const key = document.getElementById('key-select').value;
+            const chord = document.getElementById('chord-select').value;
+            const playButton = document.getElementById('play-chord-btn');
+            
+            // Remove all existing note badges
+            document.querySelectorAll('.note-badge').forEach(badge => badge.remove());
+            
+            // Remove all highlight classes
+            document.querySelectorAll('.note-item').forEach(item => {
+                item.classList.remove('highlight');
+            });
+            
+            // Enable/disable play button
+            playButton.disabled = !(key && chord);
+            
+            // If both key and chord are selected, update display
+            if (key && chord) {
+                const intervals = chordStructures[chord];
+                
+                intervals.forEach(intervalName => {
+                    const noteItems = document.querySelectorAll('.note-item');
+                    noteItems.forEach(item => {
+                        const itemInterval = item.querySelector('.note-name').textContent;
+                        if (itemInterval === intervalName) {
+                            item.classList.add('highlight');
+                            
+                            // Calculate and display the note
+                            const noteName = calculateNote(key, intervalName);
+                            const badge = document.createElement('span');
+                            badge.className = 'note-badge';
+                            badge.textContent = noteName;
+                            item.querySelector('.note-name').appendChild(badge);
+                        }
+                    });
+                });
+            }
+        }
+
+        // Play individual note
+        function playNote(element, intervalName) {
+            const key = document.getElementById('key-select').value;
+            if (!key) return;
+            
+            initAudio();
+            const frequency = calculateFrequency(key, intervalName);
+            
+            // Track this note
+            const noteId = intervalName;
+            if (!activeNotes.has(noteId)) {
+                activeNotes.set(noteId, frequency);
+                updateVolume();
+                synth.triggerAttack(frequency);
+                element.classList.add('playing');
+            }
+        }
+
+        function stopNote(element, intervalName) {
+            if (synth) {
+                const noteId = intervalName;
+                if (activeNotes.has(noteId)) {
+                    const frequency = activeNotes.get(noteId);
+                    synth.triggerRelease(frequency);
+                    activeNotes.delete(noteId);
+                    updateVolume();
+                    element.classList.remove('playing');
+                }
+            }
+        }
+
+        // Play chord
+        let chordNotes = [];
+        let chordPlaying = false;
+        
+        function startChord() {
+            const key = document.getElementById('key-select').value;
+            const chord = document.getElementById('chord-select').value;
+            
+            if (!key || !chord || chordPlaying) return;
+            
+            initAudio();
+            chordPlaying = true;
+            
+            const intervals = chordStructures[chord];
+            // Reference mode always uses default octave 4 (no voicing randomization)
+            chordNotes = intervals.map(interval => calculateFrequency(key, interval, 4));
+            
+            // Update volume for chord
+            synth.volume.value = baseVolume - 6; // Extra reduction for chord
+            
+            // Highlight all chord notes
+            const noteItems = document.querySelectorAll('.note-item.highlight');
+            noteItems.forEach(item => item.classList.add('playing'));
+            
+            // Play chord
+            synth.triggerAttack(chordNotes);
+        }
+        
+        function stopChord() {
+            if (synth && chordPlaying) {
+                synth.triggerRelease(chordNotes);
+                chordNotes = [];
+                chordPlaying = false;
+                
+                // Reset volume
+                synth.volume.value = baseVolume;
+                
+                // Remove playing class
+                const noteItems = document.querySelectorAll('.note-item.highlight');
+                noteItems.forEach(item => item.classList.remove('playing'));
+            }
+        }
+
+        // Add event listeners
+        document.getElementById('key-select').addEventListener('change', updateChordDisplay);
+        document.getElementById('chord-select').addEventListener('change', updateChordDisplay);
+        
+        // Chord button with press and hold
+        const playChordBtn = document.getElementById('play-chord-btn');
+        playChordBtn.addEventListener('mousedown', startChord);
+        playChordBtn.addEventListener('mouseup', stopChord);
+        playChordBtn.addEventListener('mouseleave', stopChord);
+        playChordBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startChord();
+        });
+        playChordBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopChord();
+        });
+        playChordBtn.addEventListener('touchcancel', stopChord);
+
+        // Add click/touch and hold listeners to all note items
+        document.addEventListener('DOMContentLoaded', () => {
+            const noteItems = document.querySelectorAll('.note-item');
+            
+            noteItems.forEach(item => {
+                const intervalName = item.querySelector('.note-name').textContent.trim();
+                
+                // Click for Builder mode (toggle selection)
+                item.addEventListener('click', (e) => {
+                    if (currentMode === 'builder') {
+                        e.preventDefault();
+                        item.classList.toggle('selected');
+                        toggleIntervalSelection(intervalName);
+                    }
+                });
+                
+                // Press and hold for Reference mode (play note)
+                item.addEventListener('mousedown', (e) => {
+                    if (currentMode === 'reference') {
+                        playNote(item, intervalName);
+                    }
+                });
+                item.addEventListener('mouseup', (e) => {
+                    if (currentMode === 'reference') {
+                        stopNote(item, intervalName);
+                    }
+                });
+                item.addEventListener('mouseleave', (e) => {
+                    if (currentMode === 'reference') {
+                        stopNote(item, intervalName);
+                    }
+                });
+                
+                // Touch events for mobile
+                item.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (currentMode === 'reference') {
+                        playNote(item, intervalName);
+                    } else {
+                        // Single tap for selection in builder mode
+                        item.classList.toggle('selected');
+                        toggleIntervalSelection(intervalName);
+                    }
+                });
+                item.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (currentMode === 'reference') {
+                        stopNote(item, intervalName);
+                    }
+                });
+                item.addEventListener('touchcancel', (e) => {
+                    if (currentMode === 'reference') {
+                        stopNote(item, intervalName);
+                    }
+                });
+            });
+
+            // Play selected notes button
+            const playSelectedBtn = document.getElementById('play-selected-btn');
+            let selectedNotesPlaying = false;
+            let selectedNoteFrequencies = [];
+
+            playSelectedBtn.addEventListener('mousedown', () => {
+                if (selectedIntervals.size === 0 || selectedNotesPlaying) return;
+                
+                initAudio();
+                selectedNotesPlaying = true;
+                
+                const key = document.getElementById('key-select').value || 'C';
+                
+                // Calculate frequencies for all selected intervals
+                selectedNoteFrequencies = Array.from(selectedIntervals).map(interval => {
+                    // Use randomized voicing if available, otherwise default to C4
+                    const octave = currentVoicing && currentVoicing[interval] !== undefined 
+                        ? 4 + currentVoicing[interval] 
+                        : 4;
+                    return calculateFrequency(key, interval, octave);
+                });
+                
+                // Update volume for multiple notes
+                synth.volume.value = baseVolume - 6;
+                
+                // Play all selected notes
+                synth.triggerAttack(selectedNoteFrequencies);
+            });
+
+            playSelectedBtn.addEventListener('mouseup', () => {
+                if (synth && selectedNotesPlaying) {
+                    synth.triggerRelease(selectedNoteFrequencies);
+                    selectedNoteFrequencies = [];
+                    selectedNotesPlaying = false;
+                    synth.volume.value = baseVolume;
+                }
+            });
+
+            playSelectedBtn.addEventListener('mouseleave', () => {
+                if (synth && selectedNotesPlaying) {
+                    synth.triggerRelease(selectedNoteFrequencies);
+                    selectedNoteFrequencies = [];
+                    selectedNotesPlaying = false;
+                    synth.volume.value = baseVolume;
+                }
+            });
+
+            // Touch events for play selected button
+            playSelectedBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (selectedIntervals.size === 0 || selectedNotesPlaying) return;
+                
+                initAudio();
+                selectedNotesPlaying = true;
+                
+                selectedNoteFrequencies = Array.from(selectedIntervals).map(interval => {
+                    return calculateFrequency('C', interval, 4);
+                });
+                
+                synth.volume.value = baseVolume - 6;
+                synth.triggerAttack(selectedNoteFrequencies);
+            });
+
+            playSelectedBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (synth && selectedNotesPlaying) {
+                    synth.triggerRelease(selectedNoteFrequencies);
+                    selectedNoteFrequencies = [];
+                    selectedNotesPlaying = false;
+                    synth.volume.value = baseVolume;
+                }
+            });
+
+            playSelectedBtn.addEventListener('touchcancel', () => {
+                if (synth && selectedNotesPlaying) {
+                    synth.triggerRelease(selectedNoteFrequencies);
+                    selectedNoteFrequencies = [];
+                    selectedNotesPlaying = false;
+                    synth.volume.value = baseVolume;
+                }
+            });
+
+            // Randomize voicing button
+            const randomizeBtn = document.getElementById('randomize-voicing-btn');
+            randomizeBtn.addEventListener('click', () => {
+                if (selectedIntervals.size >= 3 && document.getElementById('key-select').value) {
+                    randomizeVoicing();
+                    // Visual feedback
+                    randomizeBtn.textContent = '🎲 Voicing Randomized!';
+                    setTimeout(() => {
+                        randomizeBtn.textContent = '🎲 Randomize Voicing';
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
